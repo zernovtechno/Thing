@@ -1,2 +1,3 @@
 ![Thing.](Github.png)
-Multifunctional software for ESP32.
+____
+#[![Zernov.](https://www.youtube.com/favicon.ico)](https://www.youtube.com/@zernovtech)
