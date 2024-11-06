@@ -1,3 +1,3 @@
 ![Thing.](Github.png)
 ____
-#[![Zernov.](https://www.youtube.com/favicon.ico)](https://www.youtube.com/@zernovtech)
+[Youtube](https://www.youtube.com/@zernovtech)  |  [VK](https://vk.com/zernovyt)  |  [Telegram](https://t.me/zernovyt)  |  [Releases](https://github.com/ZernovTechno/Thing/releases)   |  [Latest Release](https://github.com/ZernovTechno/Thing/releases/latest)
