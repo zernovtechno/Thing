@@ -67,10 +67,10 @@ decode_results IRResult; // Результат ИК-декодирования
 Menu* Actual_Menu;
 
 void DoLog(String text) {
-  String LogText = "[DEBUG] ";
-  LogText += "[" + DateTime + "] ";
-  LogText += text;
   if (DebugMode) {
+    String LogText = "[DEBUG] ";
+    LogText += "[" + DateTime + "] ";
+    LogText += text;
     Serial.println(LogText);
   }
 }
@@ -495,19 +495,20 @@ void CreateHTMLFromActual_Menu() {
 
 void setup() {
   pinMode(IRReceiverPin, INPUT_PULLUP);
-
   pinMode(IRSenderPin, OUTPUT);
+
   irsend.begin();       // Start up the IR sender.
+
   Serial.setTimeout(50);
-
   if (DebugMode) Serial.begin(SerialFrq.toInt());
+  DoLog("Serial began on frequency " + SerialFrq);
 
-  WiFi.begin(ssid, password);
+  /*WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     if (DebugMode) DoLog("Connecting to WiFi..");
   }
-  if (DebugMode) Serial.println(WiFi.localIP());
+  if (DebugMode) Serial.println(WiFi.localIP());*/
 
   if (!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)) {
     if (DebugMode) DoLog("LittleFS Mount Failed");
@@ -531,7 +532,7 @@ void setup() {
 
   DoLog(Main_Menu.HTML());
   CreateHTMLFromActual_Menu();
-  server.begin();
+  //server.begin();
 }
 
 void loop() {
