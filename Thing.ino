@@ -60,8 +60,8 @@ IRrecv irrecv(IRReceiverPin, 1024, 100, false); // ИК приёмник.
 
 decode_results IRResult; // Результат ИК-декодирования
 
-#include "Resources\Animations\FoxyOnCorner.h" // Включаем анимацию лисы в углу в проект
-#include "Resources\Animations\FoxyOnStart.h" // Включаем анимацию лисы в шляпе
+#include "Resources/Animations/FoxyOnCorner.h" // Включаем анимацию лисы в углу в проект
+#include "Resources/Animations/FoxyOnStart.h" // Включаем анимацию лисы в шляпе
 
 #include "InterfaceBase.h"
 Menu* Actual_Menu;

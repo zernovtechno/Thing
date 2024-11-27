@@ -1,9 +1,4 @@
 // '0', 64x64px.
-//Таймер для Millis (Анимация лисички в углу)
-uint32_t FoxyOnCornerTimer = 0;
-
-//Счетчик для лисы
-int FoxyCounter = 1;
 
 const uint16_t foxy1 [4096] PROGMEM = {
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
@@ -783,15 +778,21 @@ const uint16_t foxy3 [4096] PROGMEM = {
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
 };
 
-const uint16_t * Foxy[] = {foxy1,foxy2,foxy3}; // Массив ссылок на лису клубочком
+uint32_t FoxyOnCornerTimer = 0; //Таймер для Millis (Анимация лисички в углу)
+
+int FoxyCounter = 1; //Счетчик для лисы
 
 // Цикл лисы в углу экрана
 void FoxyOnCornerLoop() {
 	if (millis() - FoxyOnCornerTimer >= 700) { // таймер на millis() для лисы сверху
-    CoolDown = false;
-    FoxyOnCornerTimer = millis(); // сброс таймера
-    tft.pushImage(250, -10, 64, 64, Foxy[FoxyCounter-1])
-    FoxyCounter++;
-    if (FoxyCounter >= 6) FoxyCounter = 1;
-  }
+    	CoolDown = false;
+    	FoxyOnCornerTimer = millis(); // сброс таймера
+    	if (FoxyCounter == 1) tft.pushImage(250, -10, 64, 64, foxy1);
+    	if (FoxyCounter == 2) tft.pushImage(250, -10, 64, 64, foxy2);
+    	if (FoxyCounter == 3) tft.pushImage(250, -10, 64, 64, foxy3);
+    	if (FoxyCounter == 4) tft.pushImage(250, -10, 64, 64, foxy2);
+    	if (FoxyCounter == 5) tft.pushImage(250, -10, 64, 64, foxy3);
+    	FoxyCounter++;
+    	if (FoxyCounter >= 6) FoxyCounter = 1;
+	}
 }
