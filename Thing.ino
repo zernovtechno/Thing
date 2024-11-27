@@ -38,10 +38,10 @@
 #include "FS.h"
 #include <LittleFS.h>
 #define FORMAT_LITTLEFS_IF_FAILED true
-#include "foxy1.h"
+#include "\Resources\Animations\FoxyOnCorner.h"
 const uint16_t * Foxy[] = {foxy1,foxy2,foxy3}; // Массив ссылок на лису клубочком
 
-#include "FoxyOnStart1.h"
+#include "\Resources\Animations\FoxyOnStart.h"
 const uint16_t * FoxyOnStart[] = {FoxyOnStart1,FoxyOnStart2,FoxyOnStart3,FoxyOnStart4,FoxyOnStart5}; // Массив ссылок на лису в шляпе
 
 //Таймер для Millis (Анимация лисички в баре)
