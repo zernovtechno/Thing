@@ -26,28 +26,18 @@
 
 */
 
-#include <Arduino.h>
-#include <SPI.h>
-#include <TFT_eSPI.h>
-#include <IRsend.h>
-#include <IRrecv.h>
-#include <IRremoteESP8266.h>
-#include <IRutils.h>
-#include "WiFi.h"
-#include "ESPAsyncWebServer.h"
-#include "FS.h"
-#include <LittleFS.h>
-#define FORMAT_LITTLEFS_IF_FAILED true
-#include "\Resources\Animations\FoxyOnCorner.h"
-const uint16_t * Foxy[] = {foxy1,foxy2,foxy3}; // Массив ссылок на лису клубочком
-
-#include "\Resources\Animations\FoxyOnStart.h"
-const uint16_t * FoxyOnStart[] = {FoxyOnStart1,FoxyOnStart2,FoxyOnStart3,FoxyOnStart4,FoxyOnStart5}; // Массив ссылок на лису в шляпе
-
-//Таймер для Millis (Анимация лисички в баре)
-uint32_t timer = 0;
-//Счетчик для лисы
-int FoxyCounter = 1;
+#include <Arduino.h> // Общая библиотека Arduino.
+#include <SPI.h> // Библиотека коммуникации по протоколу SPI
+#include <TFT_eSPI.h> // Библиотека для дисплея (тач-скрина)
+#include <IRsend.h> // Утилиты для ИК-передатчика
+#include <IRrecv.h> // Утилиты для ИК-приёмника
+#include <IRremoteESP8266.h> // Набор дешифровальщиков и шифровальщиков для ИК-приёмопередатчика
+#include <IRutils.h> // Утилиты для ИК-приёмопередатчика
+#include "WiFi.h" // Wi-Fi библиотека (ESP32)
+#include "ESPAsyncWebServer.h" // Веб сервер (Для веб-дисплея)
+#include "FS.h" // Общий класс файловая система
+#include <LittleFS.h> // Безопасная и быстрая файловая система для сохранений
+#define FORMAT_LITTLEFS_IF_FAILED true // Форматировать сохранения при ошибке
 //Частота связи по UART
 String SerialFrq = "115200";
 //Текущие дата и время
@@ -61,19 +51,18 @@ const int IRSenderPin = 16;
 
 const char* ssid = "";
 const char* password =  "";
+TFT_eSPI tft = TFT_eSPI(); // Объект дисплея 
 
-// Объект дисплея 
-TFT_eSPI tft = TFT_eSPI();
+AsyncWebServer server(80); // Веб-сервер (веб-дисплей)
 
-AsyncWebServer server(80);
+IRsend irsend(IRSenderPin); // ИК передатчик.
+IRrecv irrecv(IRReceiverPin, 1024, 100, false); // ИК приёмник.
 
-// IR transmitter
-IRsend irsend(IRSenderPin);
-// The IR receiver.
-IRrecv irrecv(IRReceiverPin, 1024, 100, false);
+decode_results IRResult; // Результат ИК-декодирования
 
-decode_results IRResult;
-// Somewhere to store the captured message.
+#include "Resources\Animations\FoxyOnCorner.h" // Включаем анимацию лисы в углу в проект
+#include "Resources\Animations\FoxyOnStart.h" // Включаем анимацию лисы в шляпе
+
 #include "InterfaceBase.h"
 Menu* Actual_Menu;
 
@@ -551,18 +540,7 @@ void loop() {
     TouchRenderer(Actual_Menu, x, y); // Обработать нажатие
     CreateHTMLFromActual_Menu();
   }
-
-  if (millis() - timer >= 700) { // таймер на millis() для лисы сверху
-    CoolDown = false;
-    timer = millis(); // сброс таймера
-    if (FoxyCounter == 1) tft.pushImage(250, -10, 64, 64, Foxy[0]);
-    if (FoxyCounter == 2) tft.pushImage(250, -10, 64, 64, Foxy[1]);
-    if (FoxyCounter == 3) tft.pushImage(250, -10, 64, 64, Foxy[2]);
-    if (FoxyCounter == 4) tft.pushImage(250, -10, 64, 64, Foxy[1]);
-    if (FoxyCounter == 5) tft.pushImage(250, -10, 64, 64, Foxy[2]);
-    FoxyCounter++;
-    if (FoxyCounter >= 6) FoxyCounter = 1;
-  }
+  FoxyOnCornerLoop();
   Actual_Menu->MenuLoop();
 }
 
