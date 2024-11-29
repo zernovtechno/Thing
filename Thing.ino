@@ -427,7 +427,7 @@ void TouchRenderer(Menu* _Menu, uint16_t TouchX, uint16_t TouchY) {
 }
 void CreateHTMLFromActual_Menu() {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->send(200, "text/html", Actual_Menu->HTML());
+      request->send(200, "text/html", Actual_Menu->HTML);
   });
     server.on("/1", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
@@ -529,7 +529,7 @@ void setup() {
   Main_Menu.Draw();
   IR_Menu_Resources.setIRMenu(&IR_Menu);
 
-  DoLog(Main_Menu.HTML());
+  DoLog(Main_Menu.HTML);
   CreateHTMLFromActual_Menu();
   server.begin();
 }
