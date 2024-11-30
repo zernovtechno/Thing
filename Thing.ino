@@ -35,6 +35,7 @@
 #include <IRutils.h> // Утилиты для ИК-приёмопередатчика
 #include "WiFi.h" // Wi-Fi библиотека (ESP32)
 #include "ESPAsyncWebServer.h" // Веб сервер (Для веб-дисплея)
+#include <ESPmDNS.h>
 #include "FS.h" // Общий класс файловая система
 #include <LittleFS.h> // Безопасная и быстрая файловая система для сохранений
 #define FORMAT_LITTLEFS_IF_FAILED true // Форматировать сохранения при ошибке
@@ -45,6 +46,8 @@ String DateTime = "Unknown datetime";
 //Режим отладки (вывод инфо в UART)
 bool DebugMode = true;
 bool CoolDown;
+bool GoBackValue;
+void GoBack() { if (GoBackValue == false){ GoBackValue = true;}}
 
 const int IRReceiverPin = 27;
 const int IRSenderPin = 16;
@@ -62,18 +65,18 @@ decode_results IRResult; // Результат ИК-декодирования
 
 #include "Resources/Animations/FoxyOnCorner.h" // Включаем анимацию лисы в углу в проект
 #include "Resources/Animations/FoxyOnStart.h" // Включаем анимацию лисы в шляпе
+// Функция для вывода отладки в Serial
+void DoLog(String text) {
+  String LogText = "[DEBUG] ";
+  LogText += "[" + DateTime + "] ";
+  LogText += text;
+  if (DebugMode) {
+    Serial.println(LogText);
+  } // Напечатать сконфигурированную строку
+}
 
 #include "InterfaceBase.h"
 Menu* Actual_Menu;
-
-void DoLog(String text) {
-  if (DebugMode) {
-    String LogText = "[DEBUG] ";
-    LogText += "[" + DateTime + "] ";
-    LogText += text;
-    Serial.println(LogText);
-  }
-}
 
 // Анимация лисички в шляпе на старте.
 void FoxAnimation(String Text, String UpperText = "", uint16_t UpperTextColor = TFT_BLACK) {
@@ -193,10 +196,12 @@ class IR_Menu_Resources_Type {
       IndexOfActive_Button = Index;
       Active_Button->Draw(TFT_WHITE, TFT_BLACK, true);
       tft.fillRect(110, 50, 110, 120, TFT_BLACK);
-      tft.drawCentreString(IRData[Index].RawString, 165, 50, 4);
-      tft.drawCentreString(IRData[Index].Address + " " + IRData[Index].Command, 165, 70, 2);
-      tft.drawCentreString(IRData[Index].Protocol, 165, 83, 2);
-      tft.drawCentreString(DateTime, 165, 93, 2);
+      AddedHTML = "";
+      drawLine(10, 200, 310, 200, TFT_WHITE);
+      drawCentreString(IRData[Index].RawString, 165, 50, 4);
+      drawCentreString(IRData[Index].Address + " " + IRData[Index].Command, 165, 70, 2);
+      drawCentreString(IRData[Index].Protocol, 165, 83, 2);
+      drawCentreString(DateTime, 165, 93, 2);
     }
   }
   void SaveIRData() {
@@ -238,7 +243,7 @@ class IR_Menu_Type : public Menu {
     IR_Menu_Resources.ResourcesLoop();
   }
   void CustomDraw() override {
-    tft.drawLine(10, 200, 310, 200, TFT_WHITE);
+    drawLine(10, 200, 310, 200, TFT_WHITE);
     irrecv.enableIRIn();  // Start up the IR receiver.
   }
   int getButtonsLength() override { return 9; } // 
@@ -270,13 +275,27 @@ class Serial_Menu_Type2 : public Menu {
     Serial.end();
     delay(500);
     Serial.begin(SerialFrq.toInt()); 
-    tft.drawCentreString(SerialFrq, 160, 210, 2);
+    drawCentreString(SerialFrq, 160, 210, 2);
     tft.setCursor(10,50);
   }
 };
 Serial_Menu_Type2 Serial_Menu2;
 
+void UpdateSerialFRQ() {
+  tft.fillRect(0, 90, 150, 90, TFT_BLACK); 
+  AddedHTML = "";
+  drawCentreString(SerialFrq, 80, 100, 4);
+  drawLine(10, 200, 310, 200, TFT_WHITE);
+}
+void AddNumberToSerialFRQ(int Number) {
+  if (SerialFrq.length() < 8) SerialFrq += Number; 
+  UpdateSerialFRQ();
+}
+void RemoveLastNumberFromSerialFRQ() {
+  if (SerialFrq.length() > 0) SerialFrq.remove(SerialFrq.length() -1); 
+  UpdateSerialFRQ();
 
+}
 
 class Serial_Menu_Type : public Menu {
   public:
@@ -284,18 +303,18 @@ class Serial_Menu_Type : public Menu {
   Button buttons[13] = {
         {10, 200, 40, 30, "<-", 2, []() { }}, //Пример кнопок. Есть параметры и лямбда-функция.
 
-        {160, 140, 30, 30, "1", 2, []() {if (SerialFrq.length() < 8) SerialFrq += "1"; tft.fillRect(0, 90, 150, 90, TFT_BLACK); tft.drawCentreString(SerialFrq, 80, 100, 4);}},
-        {200, 140, 30, 30, "2", 2, []() {if (SerialFrq.length() < 8) SerialFrq += "2"; tft.fillRect(0, 90, 150, 90, TFT_BLACK); tft.drawCentreString(SerialFrq, 80, 100, 4);}}, 
-        {240, 140, 30, 30, "3", 2, []() {if (SerialFrq.length() < 8) SerialFrq += "3"; tft.fillRect(0, 90, 150, 90, TFT_BLACK); tft.drawCentreString(SerialFrq, 80, 100, 4);}}, 
-        {160, 100, 30, 30, "4", 2, []() {if (SerialFrq.length() < 8) SerialFrq += "4"; tft.fillRect(0, 90, 150, 90, TFT_BLACK); tft.drawCentreString(SerialFrq, 80, 100, 4);}},
-        {200, 100, 30, 30, "5", 2, []() {if (SerialFrq.length() < 8) SerialFrq += "5"; tft.fillRect(0, 90, 150, 90, TFT_BLACK); tft.drawCentreString(SerialFrq, 80, 100, 4);}},  
-        {240, 100, 30, 30, "6", 2, []() {if (SerialFrq.length() < 8) SerialFrq += "6"; tft.fillRect(0, 90, 150, 90, TFT_BLACK); tft.drawCentreString(SerialFrq, 80, 100, 4);}}, 
-        {160, 60, 30, 30, "7", 2, []() {if (SerialFrq.length() < 8) SerialFrq += "7"; tft.fillRect(0, 90, 150, 90, TFT_BLACK); tft.drawCentreString(SerialFrq, 80, 100, 4);}},  
-        {200, 60, 30, 30, "8", 2, []() {if (SerialFrq.length() < 8) SerialFrq += "8"; tft.fillRect(0, 90, 150, 90, TFT_BLACK); tft.drawCentreString(SerialFrq, 80, 100, 4);}},  
-        {240, 60, 30, 30, "9", 2, []() {if (SerialFrq.length() < 8) SerialFrq += "9"; tft.fillRect(0, 90, 150, 90, TFT_BLACK); tft.drawCentreString(SerialFrq, 80, 100, 4);}},
+        {160, 140, 30, 30, "1", 2, []() {AddNumberToSerialFRQ(1);}},
+        {200, 140, 30, 30, "2", 2, []() {AddNumberToSerialFRQ(2);}}, 
+        {240, 140, 30, 30, "3", 2, []() {AddNumberToSerialFRQ(3);}}, 
+        {160, 100, 30, 30, "4", 2, []() {AddNumberToSerialFRQ(4);}},
+        {200, 100, 30, 30, "5", 2, []() {AddNumberToSerialFRQ(5);}},  
+        {240, 100, 30, 30, "6", 2, []() {AddNumberToSerialFRQ(6);}}, 
+        {160, 60, 30, 30, "7", 2, []() {AddNumberToSerialFRQ(7);}},  
+        {200, 60, 30, 30, "8", 2, []() {AddNumberToSerialFRQ(8);}},  
+        {240, 60, 30, 30, "9", 2, []() {AddNumberToSerialFRQ(9);}},
 
-        {280, 60, 30, 30, "<=", 2, []() {if (SerialFrq.length() > 0) SerialFrq.remove(SerialFrq.length() -1); tft.fillRect(0, 90, 150, 90, TFT_BLACK); tft.drawCentreString(SerialFrq, 80, 100, 4);}}, 
-        {280, 100, 30, 70, "0", 2, []() {if (SerialFrq.length() < 8) SerialFrq += "0"; tft.fillRect(0, 90, 150, 90, TFT_BLACK); tft.drawCentreString(SerialFrq, 80, 100, 4);}},
+        {280, 60, 30, 30, "<=", 2, []() {RemoveLastNumberFromSerialFRQ();}}, 
+        {280, 100, 30, 70, "0", 2, []() {AddNumberToSerialFRQ(0);}},
 
         {10, 60, 140, 30, "Run Serial port", 2, []() { Serial_Menu2.Draw(); Actual_Menu = &Serial_Menu2;}}
 
@@ -303,9 +322,7 @@ class Serial_Menu_Type : public Menu {
   Button* getButtons() override { return buttons; } // 2^16 способов отстрелить себе конечность
   int getButtonsLength() override { return 13; } // 
   void CustomDraw() override {
-    tft.drawLine(10, 200, 310, 200, TFT_WHITE);
-    tft.fillRect(0, 90, 150, 90, TFT_BLACK);
-    tft.drawCentreString(SerialFrq, 80, 100, 4);
+    UpdateSerialFRQ();
   }
 };
 Serial_Menu_Type Serial_Menu;
@@ -410,85 +427,70 @@ class Main_Menu_Type : public Menu {
 
 Main_Menu_Type Main_Menu;
 
-// Обработчик тач-скрина. Получает X и Y нажатия и актуальное меню. Сам ищет среди кнопок совпадения.
-void TouchRenderer(Menu* _Menu, uint16_t TouchX, uint16_t TouchY) {
-  for (int i = 0; i < _Menu->getButtonsLength(); i++) {
-    if (_Menu->getButtons()[i].location_X < TouchX && // Левый край
-       _Menu->getButtons()[i].Size_Width + _Menu->getButtons()[i].location_X > TouchX &&  // Правый край
-       _Menu->getButtons()[i].location_Y < TouchY && // Верх
-       _Menu->getButtons()[i].Size_Height + _Menu->getButtons()[i].location_Y > TouchY) // Низ
-      { 
-        _Menu->getButtons()[i].Action(); // Если в кнопке - выполняем действие этой кнопки
-        if (_Menu->getButtons()[i].Label == "<-") { Main_Menu.Draw(); Actual_Menu = &Main_Menu; }
-        DoLog("Do something on button " + _Menu->getButtons()[i].Label + " by clicking at X:" + TouchX + " Y:" + TouchY);
-      }
-  }
-  CoolDown = true;
-}
 void CreateHTMLFromActual_Menu() {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->send(200, "text/html", Actual_Menu->HTML);
+      request->send(200, "text/html", Actual_Menu->HTML());
   });
     server.on("/1", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[0].Action();
+      if (Actual_Menu->getButtonsLength() >= 1) Actual_Menu->getButtons()[0].Action();
     });
     server.on("/2", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[1].Action();
+      if (Actual_Menu->getButtonsLength() >= 2) Actual_Menu->getButtons()[1].Action();
     });
     server.on("/3", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[2].Action();
+      if (Actual_Menu->getButtonsLength() >= 3) Actual_Menu->getButtons()[2].Action();
     });
     server.on("/4", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[3].Action();
+      if (Actual_Menu->getButtonsLength() >= 4) Actual_Menu->getButtons()[3].Action();
     });
     server.on("/5", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[4].Action();
+      if (Actual_Menu->getButtonsLength() >= 5) Actual_Menu->getButtons()[4].Action();
     });
     server.on("/6", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[5].Action();
+      if (Actual_Menu->getButtonsLength() >= 6) Actual_Menu->getButtons()[5].Action();
     });
     server.on("/7", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[6].Action();
+      if (Actual_Menu->getButtonsLength() >= 7) Actual_Menu->getButtons()[6].Action();
     });
     server.on("/8", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[7].Action();
+      if (Actual_Menu->getButtonsLength() >= 8) Actual_Menu->getButtons()[7].Action();
     });
     server.on("/9", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[8].Action();
+      if (Actual_Menu->getButtonsLength() >= 9) Actual_Menu->getButtons()[8].Action();
     });
     server.on("/10", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[9].Action();
+      if (Actual_Menu->getButtonsLength() >= 10) Actual_Menu->getButtons()[9].Action();
     });
     server.on("/11", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[10].Action();
+      if (Actual_Menu->getButtonsLength() >= 11)Actual_Menu->getButtons()[10].Action();
     });
     server.on("/12", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[11].Action();
+      if (Actual_Menu->getButtonsLength() >= 12)Actual_Menu->getButtons()[11].Action();
     });
     server.on("/13", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[12].Action();
+      if (Actual_Menu->getButtonsLength() >= 13)Actual_Menu->getButtons()[12].Action();
     });
     server.on("/14", HTTP_GET, [](AsyncWebServerRequest *request){
       request->redirect("/");
-      Actual_Menu->getButtons()[13].Action();
+      if (Actual_Menu->getButtonsLength() >= 14) Actual_Menu->getButtons()[13].Action();
     });
       server.on("/back", HTTP_GET, [](AsyncWebServerRequest *request){
         request->redirect("/");
         Main_Menu.Draw(); 
-        Actual_Menu = &Main_Menu; 
+        Actual_Menu = &Main_Menu;
       });
   DoLog("Paint menu "+Actual_Menu->Title()+" on a WEB");
 }
@@ -503,18 +505,22 @@ void setup() {
   if (DebugMode) Serial.begin(SerialFrq.toInt());
   DoLog("Serial began on frequency " + SerialFrq);
 
-  /*WiFi.begin(ssid, password);
+  WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    if (DebugMode) DoLog("Connecting to WiFi..");
+    DoLog("Connecting to WiFi..");
   }
-  if (DebugMode) Serial.println(WiFi.localIP());*/
+  DoLog("IP: " + String(WiFi.localIP()));
+
+  if (MDNS.begin("Thing")) {
+    DoLog("MDNS successfully started! Get access on http:\\Thing.local");
+  }
 
   if (!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)) {
-    if (DebugMode) DoLog("LittleFS Mount Failed");
+    DoLog("LittleFS Mount Failed");
     return;
   } else {
-    if (DebugMode) DoLog("Little FS Mounted Successfully");
+    DoLog("LittleFS Mounted Successfully");
   }
 
   tft.init();
@@ -530,16 +536,16 @@ void setup() {
   Main_Menu.Draw();
   IR_Menu_Resources.setIRMenu(&IR_Menu);
 
-  DoLog(Main_Menu.HTML);
   CreateHTMLFromActual_Menu();
-  //server.begin();
+  server.begin();
 }
 
 void loop() {
   uint16_t x = 0, y = 0; // Координаты тача
   if (tft.getTouch(&x, &y) && !CoolDown) { // Если коснулись..
-    TouchRenderer(Actual_Menu, x, y); // Обработать нажатие
-    CreateHTMLFromActual_Menu();
+    Actual_Menu->Touch(x, y); // Обработать нажатие
+    //CreateHTMLFromActual_Menu();
+    if (GoBackValue) { Main_Menu.Draw(); Actual_Menu = &Main_Menu; GoBackValue = false;}
   }
   FoxyOnCornerLoop();
   Actual_Menu->MenuLoop();

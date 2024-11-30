@@ -1,3 +1,5 @@
+String AddedHTML;
+bool StopCrane = true;
 // Функция для преобразования RGB 565 в HEX
 String rgb565ToHex(uint16_t rgb565) {
     // Извлечение компонентов RGB из RGB 565
@@ -14,6 +16,31 @@ String rgb565ToHex(uint16_t rgb565) {
     char hexColor[8];
     sprintf(hexColor, "#%02X%02X%02X", r, g, b);
     return String(hexColor);
+}
+
+void drawPixel(int x, int y, uint16_t color) {
+    tft.drawPixel(x,y,color);
+    AddedHTML += "<div style=\"position: absolute; left: "+String(x)+"px; top: "+String(y)+"px; width: 1px; height: 1px; background-color: "+rgb565ToHex(color)+";\"></div>\n";
+}
+void drawLine(int x1, int y1, int x2, int y2, uint16_t color) {
+    tft.drawLine(x1,y1,x2,y2,color);
+    AddedHTML += "<div style=\"position: absolute; left: "+String(x1)+"px; top: "+String(y1)+"px; width: "+String(x2-x1+1)+"px; height: "+String(y2-y1+1)+"px; background-color: "+rgb565ToHex(color)+";\"></div>\n";
+}
+void drawRect(int x, int y, int width, int height, uint16_t color) {
+    tft.drawRect(x,y,width,height,color);
+    AddedHTML += "<div style=\"position: absolute; left: "+String(x)+"px; top: "+String(y)+"px; width: "+String(width)+"px; height: "+String(height)+"px; border: 1px solid "+rgb565ToHex(color)+"; background-color: transparent;\"></div>\n";
+}
+void fillRect(int x, int y, int width, int height, uint16_t color) {
+    tft.fillRect(x,y,width,height,color);
+    AddedHTML += "<div style=\"position: absolute; left: "+String(x)+"px; top: "+String(y)+"px; width: "+String(width)+"px; height: "+String(height)+"px; background-color: "+rgb565ToHex(color)+";\"></div>\n";
+}
+void drawString(String text, int x, int y, int size) {
+    tft.drawString(text, x, y, size);
+    AddedHTML += "<div class=\"simple-text\" style=\"position: absolute; left: "+String(x)+"px; top: "+String(y)+"px; font-size: "+String(size*5)+"px; color: white;\">"+text+"</div>\n";
+}
+void drawCentreString(String text, int x, int y, int size) {
+    tft.drawCentreString(text, x, y, size);
+    AddedHTML += "<div class=\"simple-text\" style=\"position: absolute; transform: translate(-50%, 0%); left: "+String(x)+"px; top: "+String(y)+"px; font-size: "+String(size*5)+"px; color: white;\">"+text+"</div>\n";
 }
 
 // Структура "кнопки". Содержит позицию, размер, текст на самой кнопке, а также ссылку на действие, воспроизводимое по нажатию.
@@ -63,7 +90,6 @@ struct Button {
           return "<a href=\"/"+String(i)+"\" class=\"simple-button\" style=\"top: "+String(location_Y)+"; left: "+String(location_X)+"px; width: "+String(Size_Width)+"px; height: "+String(Size_Height)+"px; background-color: black; color: white;\">"+Label+"</a>\n";
   }
 };
-
 // База - родительский класс для всех меню. 
 class Menu {
   public: // Модификатор доступа
@@ -71,11 +97,11 @@ class Menu {
   Button buttons[1]; // Массив с кнопками
   virtual Button* getButtons() { return buttons; } // Виртуальная функция для получения значения
   virtual int getButtonsLength() { return 1; } // Количество кнопок
-
-  String HTML = "HTML is waiting for render.";
-  virtual String* getHTML() { return &HTML; }
-  virtual void DrawHTML() {
-    HTML = "<html>\n\
+  virtual void CustomDraw() { } // Количество кнопок
+  virtual void MenuLoop() {}; // Цикл, вызываемый для актуального (загруженного) меню.
+ 
+  virtual String HTML() {
+    String HTMLSTR = "<html>\n\
     <head><meta charset=\"UTF-8\">\n\
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\
     <meta http-equiv=\"refresh\" content=\"1\">\n\
@@ -94,7 +120,7 @@ class Menu {
 			      color: white;\n\
         }\n\
         .simple-button {\n\
-            border: 3px solid white;\n\
+            border: 1px solid white;\n\
             text-decoration: none;\n\
             display: flex;\n\
             justify-content: center;\n\
@@ -112,47 +138,20 @@ class Menu {
     </style>\n\
   </head>\n\
   <body>\n\
-	<div class=\"header\" style=\"top: 40px; left: 10px; background-color: white; width: 250px; height: 3px;\"></div>\n\
+	<div class=\"header\" style=\"top: 40px; left: 10px; background-color: white; width: 250px; height: 1px;\"></div>\n\
 	<div class=\"simple-text\" style=\"top: 10px; left: 10px; width: 200px; height: 40px; font-size: 25px; color: white;\">"+Title()+"</div>\n\
   <img class=\"base64-image\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAtCAYAAAAeA21aAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAMeSURBVGhD7Zk/ctUwEMb9khYqLuDchMxQMvSUNOEOOQBUHIA0lFyAoeUCXIGxD0CKTOgf+qRdv5Us648lPRfPv5kdyYktW6vdb2W/bmcbemVHsk25onZHMCj7ZbpNwPgwjoDW98uGH6oVPHFpLe8XhFPAzcnaOWqN179UnTtjW3PxGjBzwPBeJeRbOjCU5qh1vWf8TZk5AOEJEyB8YWuxrveMvykHavGAWojcvDw8UKcATBgrP/FK3e6T0b3DQT/CqOwGnXNz8Rowj4C/qnlUC/LlFofd+Gzs9oc+tFcygynsaeV1FCg8EUAnJFMUOXMHHFWlggPuT+PCATffTb+4dH21K6vHAbmll+ewCr8DJB+Lxvcz14CJFAfLBSFWa8iuAdTOU4A0QPdbwBrwedT6wHuD1BKJKAAiEvhBsyJhOQIw8VaTB874mHjq5IHnfHjUeDWDeQREctC3L8CDhKqDm7PyfIyXe32ELNHaNYDaYARgBXgfwLnHDMPQjePYfXhnNMNdSV45vg7nI/T7B3M+RxSHM66X9wP9i6779poOIqj7Ia9gJGJhkiMAD+VOHvR9r23p/+7f+XwX9zw+1vbPOCjFFFla4MuXIx5QrxRw9gG1NQDE/p+LM15QE3YNoFaiQ0ih3+GH36pBuRLvBj4o/BZxr+PzsVK+HI+NF4PvF9OEpfA4iaLn3aAmKWWwBEpZOMA7gWB+ELYmgIBDfBoRovjlKkLMAbsGUBvC1gQOVbGNlSD3YLKOS9xQL831GDVSAJw0Yd3r6kTrkHepogHUJtNS1HLZNSBCqAyanB8G9NOh6tA6t1NZmwL2PiCHFp/QCljjgHndz6XhxikFR4SDK3LxGsAO4JAvWHYBf/Xl3wDOCFb+zc8p5KNhKCMATsgTvBBwAn34PCcI/z9PpksWpL4IujQWRRI5SdYN930AtT50/KqKYCVydnVARYDx7wwVkO8aqu/meTTsJSnhYuXAqpSoXBZzylyMNReX7xMkCRrhTBhglat4dNcAanOANkzfB4pZ+K4gub7qRlXaXBHJyvXawAkQg3NZox1V1/0HQtRnmAgP6AoAAAAASUVORK5CYII=\" />\n";
   for (int i = 1; i <= getButtonsLength(); i++) {
-      HTML += buttons[i].DrawHTML(i);
+      HTMLSTR += buttons[i].DrawHTML(i);
   }
+  HTMLSTR += AddedHTML + "</body>\n\
+  </html>"; // HTML заканчивается
+  return HTMLSTR;
   };
-
-  virtual void CustomDraw() { } // Количество кнопок
-  virtual void MenuLoop() {} // Цикл, вызываемый для актуального (загруженного) меню.
-
-  void drawPixel(int x, int y, uint16_t color) {
-    tft.drawPixel(x,y,color);
-    HTML += "<div style=\"top: "+String(x)+"px; left: "+String(y)+"px; width: 1px; height: 1px; background-color: "+rgb565ToHex(color)+";\"></div>\n";
-  }
-
-  void drawLine(int x1, int y1, int x2, int y2, uint16_t color) {
-    tft.drawLine(x1,y1,x2,y2,color);
-    HTML += "<div style=\"top: "+String(x1)+"px; left: "+String(y1)+"px; width: "+String(x2-x1)+"px; height: "+String(y2-y1)+"px; background-color: "+rgb565ToHex(color)+";\"></div>\n";
-  }
-
-  void drawRect(int x, int y, int width, int height, uint16_t color) {
-    tft.drawRect(x,y,width,height,color);
-    HTML += "<div style=\"top: "+String(x)+"px; left: "+String(y)+"px; width: "+String(width)+"px; height: "+String(height)+"px; border: 5px solid "+rgb565ToHex(color)+"; background-color: transparent;\"></div>\n";
-  }
-
-  void fillRect(int x, int y, int width, int height, uint16_t color) {
-    tft.fillRect(x,y,width,height,color);
-    HTML += "<div style=\"top: "+String(x)+"px; left: "+String(y)+"px; width: "+String(width)+"px; height: "+String(height)+"px; background-color: "+rgb565ToHex(color)+";\"></div>\n";
-  }
-
-  void drawString(String text, int x, int y, int size) {
-    tft.drawString(text, x, y, size);
- }
-
-  void drawCentreString(String text, int x, int y, int size) {
-    tft.drawCentreString(text, x, y, size);
-  }
 
   // Функция рисования меню. По умолчанию отрисовывает все кнопки в нём.
   void Draw() {
+    AddedHTML = "";
     tft.fillRect(10, 10, 200, 39, TFT_BLACK);
     tft.drawString(Title(), 10, 10, 4);
     tft.drawLine(10, 40, 240, 40, TFT_WHITE);
@@ -160,8 +159,22 @@ class Menu {
     for (int i = 0; i <= getButtonsLength(); i++) {
       buttons[i].Draw(TFT_BLACK, TFT_WHITE);
     }
-    DrawHTML();
+
     CustomDraw();
+  }
+  void Touch(uint16_t TouchX, uint16_t TouchY) {
+    for (int i = 0; i < getButtonsLength(); i++) {
+    if (getButtons()[i].location_X < TouchX && // Левый край
+       getButtons()[i].Size_Width + getButtons()[i].location_X > TouchX &&  // Правый край
+       getButtons()[i].location_Y < TouchY && // Верх
+       getButtons()[i].Size_Height + getButtons()[i].location_Y > TouchY) // Низ
+      { 
+        getButtons()[i].Action(); // Если в кнопке - выполняем действие этой кнопки
+        if (getButtons()[i].Label == "<-") { GoBack(); }
+        DoLog("Do something on button " + getButtons()[i].Label + " by clicking at X:" + TouchX + " Y:" + TouchY);
+      }
+    }
+    CoolDown = true;
   }
 
 };
