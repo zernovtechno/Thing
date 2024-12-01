@@ -39,6 +39,12 @@
 #include "FS.h" // Общий класс файловая система
 #include <LittleFS.h> // Безопасная и быстрая файловая система для сохранений
 #define FORMAT_LITTLEFS_IF_FAILED true // Форматировать сохранения при ошибке
+
+const String WEBUPDINTERVAL = String(500); //Интервал обновления данных на странице в миллисекундах
+#define IRReceiverPin 27
+#define IRSenderPin 16
+
+
 //Частота связи по UART
 String SerialFrq = "115200";
 //Текущие дата и время
@@ -49,8 +55,6 @@ bool CoolDown;
 bool GoBackValue;
 void GoBack() { if (GoBackValue == false){ GoBackValue = true;}}
 
-const int IRReceiverPin = 27;
-const int IRSenderPin = 16;
 
 const char* ssid = "";
 const char* password =  "";
@@ -540,11 +544,11 @@ void setup() {
   server.begin();
 }
 
+
 void loop() {
   uint16_t x = 0, y = 0; // Координаты тача
   if (tft.getTouch(&x, &y) && !CoolDown) { // Если коснулись..
     Actual_Menu->Touch(x, y); // Обработать нажатие
-    //CreateHTMLFromActual_Menu();
     if (GoBackValue) { Main_Menu.Draw(); Actual_Menu = &Main_Menu; GoBackValue = false;}
   }
   FoxyOnCornerLoop();
