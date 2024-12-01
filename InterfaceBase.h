@@ -104,7 +104,10 @@ class Menu {
     String HTMLSTR = "<html>\n\
     <head><meta charset=\"UTF-8\">\n\
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\
-    <meta http-equiv=\"refresh\" content=\"1\">\n\
+    <script>\n\
+    setInterval(() => {fetch(\'/\').then(response => response.text()).then(html => {document.body.innerHTML = html;}).catch(error => console.error('Error updating page:', error))}," + WEBUPDINTERVAL + "); \n\
+    </script>\n\
+    <!--<meta http-equiv=\"refresh\" content=\"1\">-->\n\
     <title>"+Title()+"</title>\n\
     <style>\n\
         body {\n\
@@ -132,6 +135,7 @@ class Menu {
             position: absolute;\n\
         }\n\
 		    .base64-image {\n\
+            image-rendering: pixelated;\n\
             position: absolute;\n\
             left: 270px;\n\
         }	\n\
