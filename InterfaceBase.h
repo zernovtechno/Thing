@@ -87,7 +87,7 @@ struct Button {
     if (Label == "<-")
           return "<a href=\"/back\" class=\"button simple-button\" style=\"top: "+String(location_Y)+"; left: "+String(location_X)+"px; width: "+String(Size_Width)+"px; height: "+String(Size_Height)+"px; background-color: black; color: white;\">"+Label+"</a>\n";
     else
-          return "<a href=\"/"+String(i)+"\" class=\"simple-button\" style=\"top: "+String(location_Y)+"; left: "+String(location_X)+"px; width: "+String(Size_Width)+"px; height: "+String(Size_Height)+"px; background-color: black; color: white;\">"+Label+"</a>\n";
+          return "<a href=\"/?button="+String(i)+"\" class=\"simple-button\" style=\"top: "+String(location_Y)+"; left: "+String(location_X)+"px; width: "+String(Size_Width)+"px; height: "+String(Size_Height)+"px; background-color: black; color: white;\">"+Label+"</a>\n";
   }
 };
 // База - родительский класс для всех меню. 
@@ -107,7 +107,6 @@ class Menu {
     <script>\n\
     setInterval(() => {fetch(\'/\').then(response => response.text()).then(html => {document.body.innerHTML = html;}).catch(error => console.error('Error updating page:', error))}," + WEBUPDINTERVAL + "); \n\
     </script>\n\
-    <!--<meta http-equiv=\"refresh\" content=\"1\">-->\n\
     <title>"+Title()+"</title>\n\
     <style>\n\
         body {\n\

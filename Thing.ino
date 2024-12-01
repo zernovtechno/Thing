@@ -53,7 +53,15 @@ String DateTime = "Unknown datetime";
 bool DebugMode = true;
 bool CoolDown;
 bool GoBackValue;
-void GoBack() { if (GoBackValue == false){ GoBackValue = true;}}
+bool Clicked = false;
+int ClickedNumber;
+void ClickOnButtonByNumber(int Number) {
+  if (!Clicked) {
+    Clicked = true;
+    ClickedNumber = Number;
+  }
+}
+void GoBack() { if (!GoBackValue){ GoBackValue = true;}}
 
 
 const char* ssid = "";
@@ -121,18 +129,18 @@ class IR_Menu_Resources_Type {
     }
   };
   void saveData(fs::FS &fs,  IRData_struct data) {
-    if (DebugMode) Serial.printf("Writing file: %s\r\n", "IRData");
+    DoLog("Writing file IRData");
 
     fs::File file = fs.open("/IRData", FILE_WRITE);
     if (!file) {
-      if (DebugMode) DoLog("IR FS - failed to open file for writing");
+      DoLog("IR FS - failed to open file for writing");
       return;
     }
     if(file.write((uint8_t*)&data, sizeof(data.raw_array) + sizeof(data.length))) { // Записываем uint16_t)
-      if (DebugMode) DoLog("IR FS - file written");
+      DoLog("IR FS - file written");
     }
     else {
-      if (DebugMode) DoLog("IR FS - write failed");
+      DoLog("IR FS - write failed");
     }
     file.println(data.RawString);  // Записываем строку
     file.println(data.Address);  // Записываем строку
@@ -170,7 +178,6 @@ class IR_Menu_Resources_Type {
   
   void ResourcesLoop () {
     if (irrecv.decode(&IRResult)) {
-      Serial.println(String(IRResult.value, HEX));
       if (String(IRResult.value, HEX).length() > 2) {
         for (int i = 1; i < 5; i++) {
           IRData[i] = IRData[i+1];
@@ -186,8 +193,6 @@ class IR_Menu_Resources_Type {
     }
   }
   void SendRawData() {
-   // if (DebugMode) Serial.println(IRData[IndexOfActive_Button].raw_array);
-    if (DebugMode) Serial.println(IRData[IndexOfActive_Button].length);
     irsend.sendRaw(IRData[IndexOfActive_Button].raw_array, IRData[IndexOfActive_Button].length, 38000);
   }
   void setIRMenu(Menu* _Menu) {
@@ -274,7 +279,7 @@ class Serial_Menu_Type2 : public Menu {
   }
   int getButtonsLength() override { return 1; } // 
   void CustomDraw() override {
-    tft.drawLine(10, 200, 310, 200, TFT_WHITE);
+    drawLine(10, 200, 310, 200, TFT_WHITE);
     delay(500);
     Serial.end();
     delay(500);
@@ -342,7 +347,7 @@ class WIFI_Menu_Type : public Menu {
   void MenuLoop() override {
   }
   void CustomDraw() override {
-    tft.drawLine(10, 200, 310, 200, TFT_WHITE);
+    drawLine(10, 200, 310, 200, TFT_WHITE);
     tft.setCursor(5,50);
     int n = WiFi.scanNetworks();
     if (n == 0) {
@@ -396,12 +401,9 @@ class WIFI_Menu_Type : public Menu {
                 tft.print("unknown");
             }
             tft.println();
-            delay(10);
         }
     }
     tft.println("");
-
-    // Delete the scan result to free memory for code below.
     WiFi.scanDelete();
   }
   int getButtonsLength() override { return 1; } // 
@@ -433,68 +435,18 @@ Main_Menu_Type Main_Menu;
 
 void CreateHTMLFromActual_Menu() {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+      for(int i=0;i<request->params();i++){
+        const AsyncWebParameter* p = request->getParam(i);
+        if (p->name() == "button") {
+          DoLog("Just got a param. Button id is " + p->value());
+          ClickOnButtonByNumber(p->value().toInt()-1);
+        }
+      }
       request->send(200, "text/html", Actual_Menu->HTML());
   });
-    server.on("/1", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 1) Actual_Menu->getButtons()[0].Action();
-    });
-    server.on("/2", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 2) Actual_Menu->getButtons()[1].Action();
-    });
-    server.on("/3", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 3) Actual_Menu->getButtons()[2].Action();
-    });
-    server.on("/4", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 4) Actual_Menu->getButtons()[3].Action();
-    });
-    server.on("/5", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 5) Actual_Menu->getButtons()[4].Action();
-    });
-    server.on("/6", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 6) Actual_Menu->getButtons()[5].Action();
-    });
-    server.on("/7", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 7) Actual_Menu->getButtons()[6].Action();
-    });
-    server.on("/8", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 8) Actual_Menu->getButtons()[7].Action();
-    });
-    server.on("/9", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 9) Actual_Menu->getButtons()[8].Action();
-    });
-    server.on("/10", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 10) Actual_Menu->getButtons()[9].Action();
-    });
-    server.on("/11", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 11)Actual_Menu->getButtons()[10].Action();
-    });
-    server.on("/12", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 12)Actual_Menu->getButtons()[11].Action();
-    });
-    server.on("/13", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 13)Actual_Menu->getButtons()[12].Action();
-    });
-    server.on("/14", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->redirect("/");
-      if (Actual_Menu->getButtonsLength() >= 14) Actual_Menu->getButtons()[13].Action();
-    });
       server.on("/back", HTTP_GET, [](AsyncWebServerRequest *request){
+        GoBack();
         request->redirect("/");
-        Main_Menu.Draw(); 
-        Actual_Menu = &Main_Menu;
       });
   DoLog("Paint menu "+Actual_Menu->Title()+" on a WEB");
 }
@@ -549,8 +501,9 @@ void loop() {
   uint16_t x = 0, y = 0; // Координаты тача
   if (tft.getTouch(&x, &y) && !CoolDown) { // Если коснулись..
     Actual_Menu->Touch(x, y); // Обработать нажатие
-    if (GoBackValue) { Main_Menu.Draw(); Actual_Menu = &Main_Menu; GoBackValue = false;}
   }
+  if (GoBackValue) { Main_Menu.Draw(); Actual_Menu = &Main_Menu; GoBackValue = false;}
+  if (Clicked) {Actual_Menu->getButtons()[ClickedNumber].Action(); Clicked = false; }
   FoxyOnCornerLoop();
   Actual_Menu->MenuLoop();
 }
