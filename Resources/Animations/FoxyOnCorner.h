@@ -785,7 +785,7 @@ int FoxyCounter = 1; //Счетчик для лисы
 // Цикл лисы в углу экрана
 void FoxyOnCornerLoop() {
 	if (millis() - FoxyOnCornerTimer >= 700) { // таймер на millis() для лисы сверху
-    	CoolDown = false;
+    	Thing.CoolDown = false;
     	FoxyOnCornerTimer = millis(); // сброс таймера
     	if (FoxyCounter == 1) tft.pushImage(250, -10, 64, 64, foxy1);
     	if (FoxyCounter == 2) tft.pushImage(250, -10, 64, 64, foxy2);
