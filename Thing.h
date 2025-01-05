@@ -19,7 +19,7 @@ public:
       ClickedNumber = Number;
     }
   }
-  
+
   bool GoBackValue; // Переменная для возврата в главное меню
   // Вернуться на главный экран
   void GoBack() {
