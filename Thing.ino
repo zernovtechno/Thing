@@ -42,9 +42,7 @@
 #define IRReceiverPin 27 // Пин ИК-приёмника
 #define IRSenderPin 16 // Пин ИК-светодиода
 
-
-const char* ssid = "";
-const char* password =  "";
+#include "Creds.h" // Включаем данные от WiFi
 
 IRsend irsend(IRSenderPin); // ИК передатчик.
 IRrecv irrecv(IRReceiverPin, 1024, 100, false); // ИК приёмник.
@@ -52,10 +50,8 @@ IRrecv irrecv(IRReceiverPin, 1024, 100, false); // ИК приёмник.
 decode_results IRResult; // Результат ИК-декодирования
 
 #include "Resources/Animations/FoxyOnStart.h" // Включаем анимацию лисы в шляпе
-#include "InterfaceBase.h"
+#include "Thing.h"
 #include "Resources/Animations/FoxyOnCorner.h" // Включаем анимацию лисы в углу в проект
-
-Menu* Actual_Menu;
 
 class IR_Menu_Resources_Type {
   public:
