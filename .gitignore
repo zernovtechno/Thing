@@ -4,3 +4,4 @@ build/esp32.esp32.esp32doit-devkit-v1/Thing.ino.bootloader.bin
 build/esp32.esp32.esp32doit-devkit-v1/Thing.ino.elf
 build/esp32.esp32.esp32doit-devkit-v1/Thing.ino.map
 build/esp32.esp32.esp32doit-devkit-v1/Thing.ino.partitions.bin
+Creds.h
