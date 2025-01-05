@@ -1,2 +1,2 @@
-const char* ssid = ""; // Идентификатор сети
+const char* ssid = "TEST"; // Идентификатор сети
 const char* password =  ""; // Пароль
