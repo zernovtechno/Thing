@@ -51,7 +51,8 @@
 #include "IR_part.h" // Включаем модуль ИК
 #include "Serial_part.h" // Включаем модуль Serial
 #include "WiFi_part.h" // Включаем модуль WiFi
-#include "GPIO_part.h" // Включаем модуль WiFi
+#include "GPIO_part.h" // Включаем модуль GPIO
+#include "Keyboard_part.h" // Включаем модуль клавиатуры
 
 // Пример наследуемого класса: класс главного меню. Имеет кучу кнопок, и ничего более.
 class Main_Menu_Type : public Menu {
@@ -67,7 +68,7 @@ class Main_Menu_Type : public Menu {
 
         {20, 180, 80, 40, "BT", 2, []() { Serial.println("Button2;1"); }},
       	{120, 180, 80, 40, "I2c", 2, []() { Serial.println("Button2;2"); }},
-        {220, 180, 80, 40, "Settings", 2, []() { Serial_Menu.Draw(); Actual_Menu = &Serial_Menu;}},
+        {220, 180, 80, 40, "Settings", 2, []() { Keyboard_Menu.Draw(); Actual_Menu = &Keyboard_Menu;}},
     };
 
   Button* getButtons() override { return buttons; } // 2^16 способов отстрелить себе конечность
@@ -109,7 +110,8 @@ void setup() {
     delay(1000);
     Thing.DoLog("Connecting to WiFi..");
   }
-  Thing.DoLog("IP: " + String(WiFi.localIP()));
+
+  if (Thing.DebugMode) Serial.println(WiFi.localIP());
 
   if (MDNS.begin("Thing")) {
     Thing.DoLog("MDNS successfully started! Get access on http:\\Thing.local");

@@ -236,7 +236,7 @@ public:  // Модификатор доступа
   };
 
   // Функция рисования меню. По умолчанию отрисовывает все кнопки в нём.
-  void Draw() {
+  virtual void Draw() {
     Thing.AddedHTML = "";
     tft.fillRect(10, 10, 200, 39, TFT_BLACK);
     tft.drawString(Title(), 10, 10, 4);
