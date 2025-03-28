@@ -77,7 +77,10 @@ class Serial_Menu_Type : public Menu {
         {280, 60, 30, 30, "<=", 2, []() {RemoveLastNumberFromSerialFRQ();}}, 
         {280, 100, 30, 70, "0", 2, []() {AddNumberToSerialFRQ(0);}},
 
-        {10, 60, 140, 30, "Run Serial port", 2, []() { Serial_Menu2.Draw(); Actual_Menu = &Serial_Menu2;}}
+        {10, 60, 140, 30, "Run Serial port", 2, []() { 
+          //Serial_Menu2.Draw(); Actual_Menu = &Serial_Menu2;
+          Keyboard_Menu.Draw(); Actual_Menu = &Keyboard_Menu;
+          StrPointer = &Thing.SerialFrq; MenuPointer = &Serial_Menu2;}}
 
     };
   Button* getButtons() override { return buttons; } // 2^16 способов отстрелить себе конечность

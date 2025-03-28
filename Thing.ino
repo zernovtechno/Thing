@@ -48,11 +48,11 @@
 #include "Thing.h"
 #include "Resources/Animations/FoxyOnCorner.h" // Включаем анимацию лисы в углу в проект
 
+#include "Keyboard_part.h" // Включаем модуль клавиатуры
 #include "IR_part.h" // Включаем модуль ИК
 #include "Serial_part.h" // Включаем модуль Serial
 #include "WiFi_part.h" // Включаем модуль WiFi
 #include "GPIO_part.h" // Включаем модуль GPIO
-#include "Keyboard_part.h" // Включаем модуль клавиатуры
 
 // Пример наследуемого класса: класс главного меню. Имеет кучу кнопок, и ничего более.
 class Main_Menu_Type : public Menu {

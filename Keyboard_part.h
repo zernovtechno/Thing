@@ -16,6 +16,8 @@ String EnglishLayout = "1234567890qwertyuiopasdfghjklzxcvbnm";
 int SelectedLetter;
 
 String Text = "";
+String* StrPointer;
+Menu* MenuPointer;
 
 void AddLetterToText(const char* Letter) {
   Text += Letter;
@@ -23,6 +25,12 @@ void AddLetterToText(const char* Letter) {
   Thing.fillRect(0, 45, 320, 30, TFT_BLACK);
   Thing.drawCentreString(Text, 160, 60, 2);
   Thing.drawLine(10, 200, 310, 200, TFT_WHITE);
+}
+
+void SendKeyboardFeedBack() {
+  StrPointer = &Text;
+  MenuPointer->Draw();
+  Actual_Menu = MenuPointer;
 }
 
 void DeleteLetterToText() {
@@ -81,7 +89,7 @@ class Keyboard_Menu_Type : public Menu {
 
         {260, 170, 50, 20, "<=", 1, []() {DeleteLetterToText(); }},
         {120, 200, 80, 30, "", 2, []() {AddLetterToText(" "); }},
-        {260, 200, 50, 30, "ENTER", 2, []() {AddLetterToText("/"); }},
+        {260, 200, 50, 30, "ENTER", 2, []() {SendKeyboardFeedBack(); }},
     };
 
   Button* getButtons() override { return buttons; } // 2^16 способов отстрелить себе конечность
