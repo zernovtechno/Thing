@@ -41,6 +41,8 @@
 #define FORMAT_LITTLEFS_IF_FAILED true // Форматировать сохранения при ошибке
 #define IRReceiverPin 27 // Пин ИК-приёмника
 #define IRSenderPin 16 // Пин ИК-светодиода
+//#define TFT_WHITE 0x0000
+//#define TFT_BLACK 0xFFFF
 
 #include "Creds.h" // Включаем данные от WiFi
 

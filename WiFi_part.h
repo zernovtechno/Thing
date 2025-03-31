@@ -12,76 +12,102 @@
 //                                                                              //
 //////////////////////////////////////////////////////////////////////////////////
 
+struct WiFiNetwork {
+    String SSID;
+    int RSSI;
+    int Channel;
+    String StringEncryptionType;
+    byte ByteEncryptionType;
+
+    void FillEncryptionType(byte encryptionType) {
+      ByteEncryptionType = encryptionType;
+      switch (encryptionType)
+            {
+            case WIFI_AUTH_OPEN:
+                StringEncryptionType = "open";
+                break;
+            case WIFI_AUTH_WEP:
+                StringEncryptionType = "WEP";
+                break;
+            case WIFI_AUTH_WPA_PSK:
+                StringEncryptionType = "WPA";
+                break;
+            case WIFI_AUTH_WPA2_PSK:
+                StringEncryptionType = "WPA2";
+                break;
+            case WIFI_AUTH_WPA_WPA2_PSK:
+                StringEncryptionType = "WPA+WPA2";
+                break;
+            case WIFI_AUTH_WPA2_ENTERPRISE:
+                StringEncryptionType = "WPA2-EAP";
+                break;
+            case WIFI_AUTH_WPA3_PSK:
+                StringEncryptionType = "WPA3";
+                break;
+            case WIFI_AUTH_WPA2_WPA3_PSK:
+                StringEncryptionType = "WPA2+WPA3";
+                break;
+            case WIFI_AUTH_WAPI_PSK:
+                StringEncryptionType = "WAPI";
+                break;
+            default:
+                StringEncryptionType = "unknown";
+            }
+    }
+  };
+WiFiNetwork WiFiNetworks[10];
+
+bool ReScan = true;
+int NetworksCount = 0;
+
 class WIFI_Menu_Type : public Menu {
   public:
   String Title() override { return "Wi-Fi.";}
-  Button buttons[1] = {
+  Button buttons[8] = {
         {10, 200, 40, 30, "<-", 2, []() { }}, //Пример кнопок. Есть параметры и лямбда-функция.
+        {140, 200, 40, 30, "ReScan", 2, []() { ReScan = true; }}, //Пример кнопок. Есть параметры и лямбда-функция.
+
+        {10, 70, 300, 20, "SSID | RSSI | CHANNEL | ENCRYPTION", 1, []() { }}, //Пример кнопок. Есть параметры и лямбда-функция.
+        {10, 90, 300, 20, " ", 1, []() { }}, //Пример кнопок. Есть параметры и лямбда-функция.
+        {10, 110, 300, 20, " ", 1, []() { }}, //Пример кнопок. Есть параметры и лямбда-функция.
+        {10, 130, 300, 20, " ", 1, []() { }}, //Пример кнопок. Есть параметры и лямбда-функция.
+        {10, 150, 300, 20, " ", 1, []() { }}, //Пример кнопок. Есть параметры и лямбда-функция.
+        {10, 170, 300, 20, " ", 1, []() { }} //Пример кнопок. Есть параметры и лямбда-функция.
     };
 
   Button* getButtons() override { return buttons; } // 2^16 способов отстрелить себе конечность
   void MenuLoop() override {
+    if (ReScan) {
+      Thing.DoLog("Go Scanning WiFi");
+      NetworksCount = WiFi.scanNetworks();
+      Thing.DoLog("Scanned. Found " + String(NetworksCount));
+      if (NetworksCount != 0) {
+        for (int i = 0; i < 5; ++i) {
+            Thing.DoLog("Remembering. Iteraion " + String(i));
+            WiFiNetworks[i].SSID = WiFi.SSID(i).c_str();
+            WiFiNetworks[i].RSSI = WiFi.RSSI(i);
+            WiFiNetworks[i].Channel = WiFi.channel(i);
+            WiFiNetworks[i].FillEncryptionType(WiFi.encryptionType(i));
+            buttons[i+3].Label = WiFiNetworks[i].SSID + " " 
+            + WiFiNetworks[i].RSSI + " " 
+            + WiFiNetworks[i].Channel + " " 
+            + WiFiNetworks[i].StringEncryptionType;
+        }
+      }
+      Thing.DoLog("Deleting");
+      WiFi.scanDelete();
+      Draw();
+      ReScan = false;
+    }
   }
   void CustomDraw() override {
     Thing.drawLine(10, 200, 310, 200, TFT_WHITE);
-    tft.setCursor(5,50);
-    int n = WiFi.scanNetworks();
-    if (n == 0) {
-        Serial.println("No networks found");
+    if (NetworksCount == 0) {
+          Thing.drawString("No networks found", 10, 50, 2);
     } else {
-        tft.print(n);
-        tft.println(" networks found");
-        tft.println("");
-        tft.println(" N| SSID                           |RSSI|CH|Encr");
-        tft.println("");
-        for (int i = 0; i < n; ++i) {
-            // Print SSID and RSSI for each network found
-            tft.printf("%2d",i + 1);
-            tft.print("|");
-            tft.printf("%-32.32s", WiFi.SSID(i).c_str());
-            tft.print("|");
-            tft.printf("%4d", WiFi.RSSI(i));
-            tft.print("|");
-            tft.printf("%2d", WiFi.channel(i));
-            tft.print("|");
-            switch (WiFi.encryptionType(i))
-            {
-            case WIFI_AUTH_OPEN:
-                tft.print("open");
-                break;
-            case WIFI_AUTH_WEP:
-                tft.print("WEP");
-                break;
-            case WIFI_AUTH_WPA_PSK:
-                tft.print("WPA");
-                break;
-            case WIFI_AUTH_WPA2_PSK:
-                tft.print("WPA2");
-                break;
-            case WIFI_AUTH_WPA_WPA2_PSK:
-                tft.print("WPA+WPA2");
-                break;
-            case WIFI_AUTH_WPA2_ENTERPRISE:
-                tft.print("WPA2-EAP");
-                break;
-            case WIFI_AUTH_WPA3_PSK:
-                tft.print("WPA3");
-                break;
-            case WIFI_AUTH_WPA2_WPA3_PSK:
-                tft.print("WPA2+WPA3");
-                break;
-            case WIFI_AUTH_WAPI_PSK:
-                tft.print("WAPI");
-                break;
-            default:
-                tft.print("unknown");
-            }
-            tft.println();
-        }
+        Thing.drawString("Found "+String(NetworksCount)+" networks", 10, 50, 2);
     }
-    tft.println("");
-    WiFi.scanDelete();
   }
-  int getButtonsLength() override { return 1; } // 
+  int getButtonsLength() override { return 8; } // 
 };
 WIFI_Menu_Type WIFI_Menu;

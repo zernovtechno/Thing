@@ -12,39 +12,42 @@
 //                                                                              //
 //////////////////////////////////////////////////////////////////////////////////
 
-String EnglishLayout = "1234567890qwertyuiopasdfghjklzxcvbnm";
 int SelectedLetter;
+bool IsUpper = true;
+bool UpperStateChanged = true;
 
 String Text = "";
-String* StrPointer;
+bool TextChanged = false;
 Menu* MenuPointer;
 
 void AddLetterToText(const char* Letter) {
   Text += Letter;
   Thing.AddedHTML = "";
-  Thing.fillRect(0, 45, 320, 30, TFT_BLACK);
+  tft.fillRect(0, 45, 320, 35, TFT_BLACK);
   Thing.drawCentreString(Text, 160, 60, 2);
   Thing.drawLine(10, 200, 310, 200, TFT_WHITE);
 }
 
 void SendKeyboardFeedBack() {
-  StrPointer = &Text;
+  TextChanged = true;
   MenuPointer->Draw();
   Actual_Menu = MenuPointer;
+}
+
+void ChangeShift() {
+  UpperStateChanged = true;
+  IsUpper = !IsUpper;
 }
 
 void DeleteLetterToText() {
   Text.remove(Text.length() - 1); ;
   Thing.AddedHTML = "";
-  Thing.fillRect(0, 45, 320, 30, TFT_BLACK);
+  Thing.fillRect(0, 45, 320, 35, TFT_BLACK);
   Thing.drawCentreString(Text, 160, 60, 2);
   Thing.drawLine(10, 200, 310, 200, TFT_WHITE);
 }
 
-class Keyboard_Menu_Type : public Menu {
-  public:
-  String Title() override { return "Keyboard.";}
-  Button buttons[43] = {
+Button EnglishUpper_Layout[44] = {
         {10, 200, 40, 30, "<-", 2, []() { }}, //Пример кнопок. Есть параметры и лямбда-функция.
 
         {15, 80, 20, 20, "1", 1, []() {AddLetterToText("1"); }},
@@ -87,10 +90,65 @@ class Keyboard_Menu_Type : public Menu {
         {200, 170, 20, 20, "N", 1, []() {AddLetterToText("N"); }},
         {230, 170, 20, 20, "M", 1, []() {AddLetterToText("M"); }},
 
+        {10, 170, 30, 20, "SHIFT", 1, []() {ChangeShift(); }},
         {260, 170, 50, 20, "<=", 1, []() {DeleteLetterToText(); }},
         {120, 200, 80, 30, "", 2, []() {AddLetterToText(" "); }},
         {260, 200, 50, 30, "ENTER", 2, []() {SendKeyboardFeedBack(); }},
     };
+
+Button EnglishLower_Layout[44] = {
+        {10, 200, 40, 30, "<-", 2, []() { }}, //Пример кнопок. Есть параметры и лямбда-функция.
+
+        {15, 80, 20, 20, "1", 1, []() {AddLetterToText("1"); }},
+        {45, 80, 20, 20, "2", 1, []() {AddLetterToText("2"); }},
+        {75, 80, 20, 20, "3", 1, []() {AddLetterToText("3"); }},
+        {105, 80, 20, 20, "4", 1, []() {AddLetterToText("4"); }},
+        {135, 80, 20, 20, "5", 1, []() {AddLetterToText("5"); }},
+        {165, 80, 20, 20, "6", 1, []() {AddLetterToText("6"); }},
+        {195, 80, 20, 20, "7", 1, []() {AddLetterToText("7"); }},
+        {225, 80, 20, 20, "8", 1, []() {AddLetterToText("8"); }},
+        {255, 80, 20, 20, "9", 1, []() {AddLetterToText("9"); }},
+        {285, 80, 20, 20, "0", 1, []() {AddLetterToText("0"); }},
+
+        {15, 110, 20, 20, "q", 1, []() {AddLetterToText("q"); }},
+        {45, 110, 20, 20, "w", 1, []() {AddLetterToText("w"); }},
+        {75, 110, 20, 20, "e", 1, []() {AddLetterToText("e"); }},
+        {105, 110, 20, 20, "r", 1, []() {AddLetterToText("r"); }},
+        {135, 110, 20, 20, "t", 1, []() {AddLetterToText("t"); }},
+        {165, 110, 20, 20, "y", 1, []() {AddLetterToText("y"); }},
+        {195, 110, 20, 20, "u", 1, []() {AddLetterToText("u"); }},
+        {225, 110, 20, 20, "i", 1, []() {AddLetterToText("i"); }},
+        {255, 110, 20, 20, "o", 1, []() {AddLetterToText("o"); }},
+        {285, 110, 20, 20, "p", 1, []() {AddLetterToText("p"); }},
+
+        {30, 140, 20, 20, "a", 1, []() {AddLetterToText("a"); }},
+        {60, 140, 20, 20, "s", 1, []() {AddLetterToText("s"); }},
+        {90, 140, 20, 20, "d", 1, []() {AddLetterToText("d"); }},
+        {120, 140, 20, 20, "f", 1, []() {AddLetterToText("f"); }},
+        {150, 140, 20, 20, "g", 1, []() {AddLetterToText("g"); }},
+        {180, 140, 20, 20, "h", 1, []() {AddLetterToText("h"); }},
+        {210, 140, 20, 20, "j", 1, []() {AddLetterToText("j"); }},
+        {240, 140, 20, 20, "k", 1, []() {AddLetterToText("k"); }},
+        {270, 140, 20, 20, "l", 1, []() {AddLetterToText("l"); }},
+
+        {50, 170, 20, 20, "z", 1, []() {AddLetterToText("z"); }},
+        {80, 170, 20, 20, "x", 1, []() {AddLetterToText("x"); }},
+        {110, 170, 20, 20, "c", 1, []() {AddLetterToText("c"); }},
+        {140, 170, 20, 20, "v", 1, []() {AddLetterToText("v"); }},
+        {170, 170, 20, 20, "b", 1, []() {AddLetterToText("b"); }},
+        {200, 170, 20, 20, "n", 1, []() {AddLetterToText("n"); }},
+        {230, 170, 20, 20, "m", 1, []() {AddLetterToText("m"); }},
+
+        {10, 170, 30, 20, "SHIFT", 1, []() {ChangeShift(); }},
+        {260, 170, 50, 20, "<=", 1, []() {DeleteLetterToText(); }},
+        {120, 200, 80, 30, "", 2, []() {AddLetterToText(" "); }},
+        {260, 200, 50, 30, "ENTER", 2, []() {SendKeyboardFeedBack(); }},
+    };
+
+class Keyboard_Menu_Type : public Menu {
+  public:
+  String Title() override { return "Keyboard.";}
+  Button buttons[44] = { {10, 200, 45, 30, "<-", 2, []() { }}, };
 
   Button* getButtons() override { return buttons; } // 2^16 способов отстрелить себе конечность
 
@@ -121,11 +179,19 @@ class Keyboard_Menu_Type : public Menu {
     }
   }*/
   void MenuLoop() override {
+    if (UpperStateChanged) {
+      for(int i=1; i<= getButtonsLength(); i++)
+      {
+        buttons[i] = IsUpper ? EnglishUpper_Layout[i] : EnglishLower_Layout[i];
+      }
+      Draw();
+      UpperStateChanged = false;
+    }
   }
   void CustomDraw() override {
     Thing.drawLine(10, 200, 310, 200, TFT_WHITE);
     Thing.drawCentreString(Text, 160, 60, 2);
   }
-  int getButtonsLength() override { return 43; } // 
+  int getButtonsLength() override { return 44; } // 
 };
 Keyboard_Menu_Type Keyboard_Menu;

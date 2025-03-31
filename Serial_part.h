@@ -1,3 +1,4 @@
+#include "WString.h"
 //////////////////////////////////////////////////////////////////////////////////
 //    _________    ___   ___      __________      ___   ___       _______       //
 //   /________/\  /__/\ /__/\    /_________/\    /__/\ /__/\     /______/\      //
@@ -12,13 +13,12 @@
 //                                                                              //
 //////////////////////////////////////////////////////////////////////////////////
 
-
 class Serial_Menu_Type2 : public Menu {
   public:
   String Title() override { return "Serial.";}
-  Button buttons[1] = {
+  Button buttons[2] = {
         {10, 200, 40, 30, "<-", 2, []() { if (!Thing.DebugMode) Serial.end(); }}, //Пример кнопок. Есть параметры и лямбда-функция.
-
+        {250, 200, 60, 30, "Send", 2, []() { Keyboard_Menu.Draw(); MenuPointer = Actual_Menu; Actual_Menu = &Keyboard_Menu;}},
     };
   Button* getButtons() override { return buttons; } // 2^16 способов отстрелить себе конечность
   void MenuLoop() {
@@ -28,8 +28,17 @@ class Serial_Menu_Type2 : public Menu {
       tft.setCursor(10 + tft.getCursorX(), 5 + tft.getCursorY());
       tft.setTextColor(TFT_WHITE);
     }
+    if (TextChanged) { 
+      Serial.println(Text); 
+      tft.setTextColor(TFT_BLUE);
+      tft.println("> " + Text);
+      tft.setCursor(10 + tft.getCursorX(), 5 + tft.getCursorY());
+      tft.setTextColor(TFT_WHITE);
+      Text = "";
+      TextChanged = false; 
+      }
   }
-  int getButtonsLength() override { return 1; } // 
+  int getButtonsLength() override { return 2; } // 
   void CustomDraw() override {
     Thing.drawLine(10, 200, 310, 200, TFT_WHITE);
     delay(500);
@@ -77,10 +86,7 @@ class Serial_Menu_Type : public Menu {
         {280, 60, 30, 30, "<=", 2, []() {RemoveLastNumberFromSerialFRQ();}}, 
         {280, 100, 30, 70, "0", 2, []() {AddNumberToSerialFRQ(0);}},
 
-        {10, 60, 140, 30, "Run Serial port", 2, []() { 
-          //Serial_Menu2.Draw(); Actual_Menu = &Serial_Menu2;
-          Keyboard_Menu.Draw(); Actual_Menu = &Keyboard_Menu;
-          StrPointer = &Thing.SerialFrq; MenuPointer = &Serial_Menu2;}}
+        {10, 60, 140, 30, "Run Serial port", 2, []() { Serial_Menu2.Draw(); Actual_Menu = &Serial_Menu2;}}
 
     };
   Button* getButtons() override { return buttons; } // 2^16 способов отстрелить себе конечность
