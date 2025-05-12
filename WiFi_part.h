@@ -69,6 +69,7 @@ struct WiFiNetwork {
 WiFiNetwork WiFiNetworks[50];
 
 bool ReScan = true;
+bool DrawButtons = false;
 int NetworksCount = 0;
 int SelectedNetwork;
 int SelectedArray;
@@ -154,19 +155,22 @@ class WIFI_Choose_Type : public Menu {
 };
 WIFI_Choose_Type WIFI_Choose;
 
+int DisplayedScreen = 0;
+
 class WIFI_Menu_Type : public Menu {
   public:
   String Title() override { return "Wi-Fi.";}
-  Button buttons[8] = {
-        {10, 200, 40, 30, "<-", 2, []() { }}, //Пример кнопок. Есть параметры и лямбда-функция.
+  Button buttons[9] = {
+        {10, 200, 40, 30, "<-", 2, []() {  DisplayedScreen = 0; DrawButtons = true; }}, //Пример кнопок. Есть параметры и лямбда-функция.
         {130, 200, 60, 30, "ReScan", 2, []() { ReScan = true; }}, //Пример кнопок. Есть параметры и лямбда-функция.
+        {270, 200, 40, 30, "->", 2, []() { if (DisplayedScreen < 10) { DisplayedScreen++; DrawButtons = true; } }},
 
         {10, 70, 300, 20, "SSID | RSSI | CHANNEL | ENCRYPTION", 1, []() { }}, //Пример кнопок. Есть параметры и лямбда-функция.
-        {10, 90, 300, 20, " ", 1, []() { SelectedNetwork = 0; WIFI_Choose.Draw(); Actual_Menu = &WIFI_Choose; }}, //Пример кнопок. Есть параметры и лямбда-функция.
-        {10, 110, 300, 20, " ", 1, []() { SelectedNetwork = 1; WIFI_Choose.Draw(); Actual_Menu = &WIFI_Choose; }}, //Пример кнопок. Есть параметры и лямбда-функция.
-        {10, 130, 300, 20, " ", 1, []() { SelectedNetwork = 2; WIFI_Choose.Draw(); Actual_Menu = &WIFI_Choose; }}, //Пример кнопок. Есть параметры и лямбда-функция.
-        {10, 150, 300, 20, " ", 1, []() { SelectedNetwork = 3; WIFI_Choose.Draw(); Actual_Menu = &WIFI_Choose; }}, //Пример кнопок. Есть параметры и лямбда-функция.
-        {10, 170, 300, 20, " ", 1, []() { SelectedNetwork = 4; WIFI_Choose.Draw(); Actual_Menu = &WIFI_Choose; }} //Пример кнопок. Есть параметры и лямбда-функция.
+        {10, 90, 300, 20, " ", 1, []() { SelectedNetwork = DisplayedScreen*5+0; WIFI_Choose.Draw(); Actual_Menu = &WIFI_Choose; }}, //Пример кнопок. Есть параметры и лямбда-функция.
+        {10, 110, 300, 20, " ", 1, []() { SelectedNetwork = DisplayedScreen*5+1; WIFI_Choose.Draw(); Actual_Menu = &WIFI_Choose; }}, //Пример кнопок. Есть параметры и лямбда-функция.
+        {10, 130, 300, 20, " ", 1, []() { SelectedNetwork = DisplayedScreen*5+2; WIFI_Choose.Draw(); Actual_Menu = &WIFI_Choose; }}, //Пример кнопок. Есть параметры и лямбда-функция.
+        {10, 150, 300, 20, " ", 1, []() { SelectedNetwork = DisplayedScreen*5+3; WIFI_Choose.Draw(); Actual_Menu = &WIFI_Choose; }}, //Пример кнопок. Есть параметры и лямбда-функция.
+        {10, 170, 300, 20, " ", 1, []() { SelectedNetwork = DisplayedScreen*5+4; WIFI_Choose.Draw(); Actual_Menu = &WIFI_Choose; }} //Пример кнопок. Есть параметры и лямбда-функция.
     };
 
   Button* getButtons() override { return buttons; } // 2^16 способов отстрелить себе конечность
@@ -176,23 +180,28 @@ class WIFI_Menu_Type : public Menu {
       NetworksCount = WiFi.scanNetworks();
       Thing.DoLog("Scanned. Found " + String(NetworksCount));
       if (NetworksCount != 0) {
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < NetworksCount; ++i) {
             Thing.DoLog("Remembering. Iteraion " + String(i));
             WiFiNetworks[i].SSID = WiFi.SSID(i).c_str();
             WiFiNetworks[i].RSSI = WiFi.RSSI(i);
             WiFiNetworks[i].Channel = WiFi.channel(i);
             WiFiNetworks[i].FillEncryptionType(WiFi.encryptionType(i));
-
-            buttons[i+3].Label = WiFiNetworks[i].SSID + " " 
-            + WiFiNetworks[i].RSSI + " " 
-            + WiFiNetworks[i].Channel + " " 
-            + WiFiNetworks[i].StringEncryptionType;
         }
       }
       Thing.DoLog("Deleting");
       WiFi.scanDelete();
-      Draw();
       ReScan = false;
+      DrawButtons = true;
+    }
+    if (DrawButtons) {
+        for (int i = 0; i < 5; i++) {
+          buttons[i+4].Label = WiFiNetworks[DisplayedScreen*5 + i].SSID + " " 
+            + WiFiNetworks[DisplayedScreen*5 + i].RSSI + " " 
+            + WiFiNetworks[DisplayedScreen*5 + i].Channel + " " 
+            + WiFiNetworks[DisplayedScreen*5 + i].StringEncryptionType;
+        }
+        DrawButtons = false;
+        Draw();
     }
   }
   void CustomDraw() override {
@@ -203,6 +212,6 @@ class WIFI_Menu_Type : public Menu {
         Thing.drawString("Found "+String(NetworksCount)+" networks", 10, 50, 2);
     }
   }
-  int getButtonsLength() override { return 8; } // 
+  int getButtonsLength() override { return 9; } // 
 };
 WIFI_Menu_Type WIFI_Menu;

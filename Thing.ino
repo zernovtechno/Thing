@@ -39,8 +39,6 @@
 #include "FS.h" // Общий класс файловая система
 #include <LittleFS.h> // Безопасная и быстрая файловая система для сохранений
 #define FORMAT_LITTLEFS_IF_FAILED true // Форматировать сохранения при ошибке
-#define IRReceiverPin 27 // Пин ИК-приёмника
-#define IRSenderPin 16 // Пин ИК-светодиода
 //#define TFT_WHITE 0x0000
 //#define TFT_BLACK 0xFFFF
 
@@ -55,6 +53,7 @@
 #include "Serial_part.h" // Включаем модуль Serial
 #include "WiFi_part.h" // Включаем модуль WiFi
 #include "GPIO_part.h" // Включаем модуль GPIO
+#include "Settings_part.h"
 
 // Пример наследуемого класса: класс главного меню. Имеет кучу кнопок, и ничего более.
 class Main_Menu_Type : public Menu {
@@ -70,7 +69,7 @@ class Main_Menu_Type : public Menu {
 
         {20, 180, 80, 40, "BT", 2, []() { Serial.println("Button2;1"); }},
       	{120, 180, 80, 40, "I2c", 2, []() { Serial.println("Button2;2"); }},
-        {220, 180, 80, 40, "Settings", 2, []() { Keyboard_Menu.Draw(); Actual_Menu = &Keyboard_Menu;}},
+        {220, 180, 80, 40, "Settings", 2, []() { Keyboard_Menu.Draw(); Actual_Menu = &Settings_Menu;}},
     };
 
   Button* getButtons() override { return buttons; } // 2^16 способов отстрелить себе конечность
@@ -98,6 +97,14 @@ void CreateHTMLFromActual_Menu() {
 }
 
 void setup() {
+  tft.init();
+  tft.setRotation(1);
+  tft.setSwapBytes(true);
+
+  tft.fillScreen(TFT_WHITE);
+  tft.setTextColor(TFT_BLACK, TFT_WHITE);
+  tft.drawCentreString("zernov.", 160, 100, 4);
+
   pinMode(IRReceiverPin, INPUT_PULLUP);
   pinMode(IRSenderPin, OUTPUT);
 
@@ -126,11 +133,9 @@ void setup() {
     Thing.DoLog("LittleFS Mounted Successfully");
   }
 
-  tft.init();
-  tft.setRotation(1);
-  tft.setSwapBytes(true);
-
-  Thing.FoxAnimation("Welcome!");
+  delay(2000);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.fillScreen(TFT_BLACK);
   
   uint16_t calData[5] = { 437, 3472, 286, 3526, 3 };
   tft.setTouch(calData);
