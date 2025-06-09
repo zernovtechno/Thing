@@ -38,9 +38,11 @@
 #include <ESPmDNS.h>
 #include "FS.h" // Общий класс файловая система
 #include <LittleFS.h> // Безопасная и быстрая файловая система для сохранений
+#include "time.h"
 #define FORMAT_LITTLEFS_IF_FAILED true // Форматировать сохранения при ошибке
 //#define TFT_WHITE 0x0000
 //#define TFT_BLACK 0xFFFF
+
 
 #include "Creds.h" // Включаем данные от WiFi
 
@@ -83,7 +85,7 @@ void CreateHTMLFromActual_Menu() {
       for(int i=0;i<request->params();i++){
         const AsyncWebParameter* p = request->getParam(i);
         if (p->name() == "button") {
-          Thing.DoLog("Just got a param. Button id is " + p->value());
+          Thing.DoLog("Button click via HTTP_GET. Button id is " + p->value());
           Thing.ClickOnButtonByNumber(p->value().toInt()-1);
         }
       }
@@ -93,52 +95,21 @@ void CreateHTMLFromActual_Menu() {
         Thing.GoBack();
         request->redirect("/");
       });
-  Thing.DoLog("Paint menu "+Actual_Menu->Title()+" on a WEB");
+  Thing.DoLog("Actual menu: "+Actual_Menu->Title());
 }
 
 void setup() {
-  tft.init();
-  tft.setRotation(1);
-  tft.setSwapBytes(true);
-
-  tft.fillScreen(TFT_WHITE);
-  tft.setTextColor(TFT_BLACK, TFT_WHITE);
-  tft.drawCentreString("zernov.", 160, 100, 4);
-
   pinMode(IRReceiverPin, INPUT_PULLUP);
   pinMode(IRSenderPin, OUTPUT);
-
   irsend.begin();       // Start up the IR sender.
 
-  Serial.setTimeout(50);
-  if (Thing.DebugMode) Serial.begin(Thing.SerialFrq.toInt());
-  Thing.DoLog("Serial began on frequency " + Thing.SerialFrq);
-
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Thing.DoLog("Connecting to WiFi..");
-  }
-
-  if (Thing.DebugMode) Serial.println(WiFi.localIP());
-
-  if (MDNS.begin("Thing")) {
-    Thing.DoLog("MDNS successfully started! Get access on http:\\Thing.local");
-  }
-
-  if (!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)) {
-    Thing.DoLog("LittleFS Mount Failed");
-    return;
-  } else {
-    Thing.DoLog("LittleFS Mounted Successfully");
-  }
-
-  delay(2000);
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.fillScreen(TFT_BLACK);
-  
-  uint16_t calData[5] = { 437, 3472, 286, 3526, 3 };
-  tft.setTouch(calData);
+  Thing.PrepareSerial();
+  Thing.PrepareTFT();
+  Thing.ConnectToWiFi();
+  Thing.PrepareNTP();
+  Thing.StartMDNS();
+  Thing.PrepareLittleFS();
+  Thing.PrepareTFTForMainMenu();
 
   Actual_Menu = &Main_Menu;
   Main_Menu.Draw();

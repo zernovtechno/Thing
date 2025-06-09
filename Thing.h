@@ -1,3 +1,4 @@
+#include "WiFiType.h"
 //////////////////////////////////////////////////////////////////////////////////
 //    _________    ___   ___      __________      ___   ___       _______       //
 //   /________/\  /__/\ /__/\    /_________/\    /__/\ /__/\     /______/\      //
@@ -15,7 +16,9 @@
 TFT_eSPI tft = TFT_eSPI();  // Объект дисплея
 AsyncWebServer server(80);  // Веб-сервер (веб-дисплей)
 
-
+String formattedDate;
+String dayStamp;
+String timeStamp;
 
 class ThingClass {
 public:
@@ -26,6 +29,7 @@ public:
   bool CoolDown; // Задержка нажатия
   bool Clicked = false;
   int ClickedNumber;
+  bool GoBackValue; // Переменная для возврата в главное меню
   // Нажать на кнопку в меню (Номер кнопки)
   void ClickOnButtonByNumber(int Number) {
     if (!Clicked) {
@@ -34,7 +38,6 @@ public:
     }
   }
 
-  bool GoBackValue; // Переменная для возврата в главное меню
   // Вернуться на главный экран
   void GoBack() {
     if (!GoBackValue) {
@@ -42,13 +45,13 @@ public:
     }
   }
   // Функция для вывода отладки в Serial
-  void DoLog(String text) {
-    String LogText = "[THING DEBUG] ";
-    LogText += "[" + DateTime + "] ";
-    LogText += text;
-    if (DebugMode) {
-      Serial.println(LogText); // Напечатать сконфигурированную строку
-    } 
+  void DoLog(String text, String prefix = "THING DEBUG") {
+    //String LogText = "[" + prefix + "] ";
+    //LogText += "[" + DateTime + "] ";
+    //LogText += text;
+    UpdateTime();
+    if (DebugMode)
+      Serial.println("[" + prefix + "] " + "[" + DateTime + "] " + text); // Напечатать сконфигурированную строку
   }
   // Анимация лисички в шляпе на старте.
   void FoxAnimation(String Text, String UpperText = "", uint16_t UpperTextColor = TFT_BLACK) {
@@ -64,6 +67,83 @@ public:
     }
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.fillScreen(TFT_BLACK);
+  }
+
+  void ConnectToWiFi() {
+    WiFi.begin(ssid, password);
+    for (int i = 0; i < 10; i++) {
+      if (WiFi.status() == WL_CONNECTED) {
+         break;
+         DoLog("WiFi connection successful.");
+         if (DebugMode) Serial.println(WiFi.localIP());
+      }
+      delay(500);
+      DoLog("Connecting to WiFi, iteration: " + String(i));
+    }
+    if (WiFi.status() != WL_CONNECTED) {
+      WiFi.disconnect();
+      DoLog("WiFi connection failed!", "THING ERROR");
+    }
+  }
+
+  void StartMDNS() {
+    if (MDNS.begin("Thing")) {
+      DoLog("MDNS successfully started. Get access on http:\\Thing.local");
+    }
+    else {
+      DoLog("MDNS starting failed!", "THING ERROR");
+    }
+  }
+  
+  void PrepareNTP() {
+    configTime(18000, 0, "pool.ntp.org");
+  }
+
+  void PrepareSerial() {
+    Serial.setTimeout(50);
+    if (DebugMode) Serial.begin(SerialFrq.toInt());
+    DoLog("Serial port started on frequency " + SerialFrq + ".");
+  }
+
+  void PrepareLittleFS() {
+    if (!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)) {
+      DoLog("LittleFS mount failed!", "THING ERROR");
+      return;
+    } else {
+      DoLog("LittleFS mounted successfully.");
+    }
+  }
+
+  void PrepareTFT() {
+    tft.init();
+    tft.setRotation(1);
+    tft.setSwapBytes(true);
+
+    tft.fillScreen(TFT_WHITE);
+    tft.setTextColor(TFT_BLACK, TFT_WHITE);
+    tft.drawCentreString("zernov.", 160, 100, 4);
+  }
+
+  void PrepareTFTForMainMenu() {
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.fillScreen(TFT_BLACK);
+    uint16_t calData[5] = { 437, 3472, 286, 3526, 3 };
+    tft.setTouch(calData);
+  }
+
+  void UpdateTime() {
+
+    if (WiFi.status() == WL_CONNECTED) {
+      struct tm timeinfo;  // Структура для хранения компонентов времени
+      if (!getLocalTime(&timeinfo)) {
+        DateTime = "Unknown datetime";
+        return;  // Выход из функции, если время не получено
+      }
+      char timeStringBuff[50];  // Буфер для отформатированной строки времени
+      strftime(timeStringBuff, sizeof(timeStringBuff), "%B, %d, %Y %H:%M:%S", &timeinfo);
+      DateTime = timeStringBuff;  // Вывод полной строки времени
+    }
+    else DateTime = "Unknown datetime";
   }
   // Функция для преобразования RGB 565 в HEX
   String rgb565ToHex(uint16_t rgb565) {
